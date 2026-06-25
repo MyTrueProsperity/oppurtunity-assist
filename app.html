@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Opportunity Assist — App</title>
+  <meta name="description" content="Opportunity Assist app — find, score, and pursue funding opportunities." />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230f2e3d'/%3E%3Cpath d='M20 40 L30 28 L38 36 L48 22' fill='none' stroke='%23e0a64a' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+  <style>
+/* Opportunity Assist — app UI */
+:root{
+  --navy:#0f2e3d;--navy-2:#143b4d;--teal:#2c7a7b;--gold:#e0a64a;
+  --ink:#16242c;--muted:#5b6b73;--line:#e3e9ec;--bg:#f5f8f9;--card:#fff;
+  --good:#1f8a52;--warn:#c47d1a;--bad:#b4452f;--radius:12px;
+  --shadow:0 8px 24px rgba(15,46,61,.08);
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--font);color:var(--ink);background:var(--bg);line-height:1.55}
+a{color:var(--teal);text-decoration:none}
+a:hover{text-decoration:underline}
+h1,h2,h3{color:var(--navy);margin:0 0 .4em;line-height:1.2}
+.boot{display:grid;place-items:center;height:100vh;color:var(--muted)}
+button{font-family:inherit}
+.btn{display:inline-block;font-weight:600;padding:.62rem 1.1rem;border-radius:9px;border:1px solid transparent;cursor:pointer;font-size:.95rem;transition:.15s}
+.btn:hover{transform:translateY(-1px)}
+.btn-primary{background:var(--gold);color:var(--navy)}
+.btn-primary:hover{background:#edb45c}
+.btn-teal{background:var(--teal);color:#fff}
+.btn-ghost{background:#fff;color:var(--navy);border-color:var(--line)}
+.btn-sm{padding:.4rem .7rem;font-size:.85rem}
+.btn[disabled]{opacity:.5;cursor:not-allowed;transform:none}
+input,textarea,select{width:100%;padding:.6rem .7rem;border:1px solid var(--line);border-radius:9px;font-family:inherit;font-size:.95rem;background:#fff;color:var(--ink)}
+label{display:block;font-weight:600;font-size:.85rem;margin:0 0 .3rem;color:var(--navy)}
+.field{margin-bottom:1rem}
+.hint{color:var(--muted);font-size:.82rem;margin:.25rem 0 0}
+.error{color:var(--bad);font-size:.9rem;margin:.5rem 0}
+.notice{background:#e4f5ec;color:var(--good);border-radius:9px;padding:.7rem .9rem;font-size:.9rem;margin:.6rem 0}
+
+/* AUTH */
+.auth-wrap{display:grid;place-items:center;min-height:100vh;padding:24px;background:linear-gradient(160deg,var(--navy),var(--navy-2))}
+.auth-card{background:#fff;border-radius:16px;box-shadow:var(--shadow);padding:32px;width:100%;max-width:420px}
+.auth-brand{display:flex;align-items:center;gap:10px;margin-bottom:1.2rem}
+.brand-mark{display:grid;place-items:center;width:38px;height:38px;border-radius:10px;background:var(--gold);color:var(--navy);font-weight:800}
+.brand-mark.sm{width:30px;height:30px;font-size:.8rem}
+.auth-brand small{display:block;color:var(--muted);font-size:.72rem}
+.auth-tabs{display:flex;gap:6px;margin-bottom:1.2rem;background:var(--bg);padding:4px;border-radius:10px}
+.auth-tabs button{flex:1;border:0;background:transparent;padding:.55rem;border-radius:8px;font-weight:600;color:var(--muted);cursor:pointer}
+.auth-tabs button.active{background:#fff;color:var(--navy);box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.auth-foot{margin-top:1rem;text-align:center;font-size:.85rem;color:var(--muted)}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+.sidebar{background:var(--navy);color:#cfe0e2;padding:20px 14px;display:flex;flex-direction:column}
+.side-brand{display:flex;align-items:center;gap:10px;color:#fff;padding:6px 8px 18px}
+.side-brand strong{font-size:1rem}
+.side-brand small{display:block;color:#9fc0c2;font-size:.68rem}
+.nav-link{display:flex;align-items:center;gap:10px;padding:.6rem .7rem;border-radius:9px;color:#cfe0e2;font-weight:500;cursor:pointer;border:0;background:transparent;width:100%;text-align:left;font-size:.95rem}
+.nav-link:hover{background:rgba(255,255,255,.08);text-decoration:none;color:#fff}
+.nav-link.active{background:var(--teal);color:#fff}
+.nav-ico{font-size:1.05rem}
+.side-foot{margin-top:auto;font-size:.8rem;color:#9fc0c2;padding:8px}
+.side-foot button{margin-top:8px}
+
+.main{padding:28px 32px;overflow:auto}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;gap:16px;flex-wrap:wrap}
+.topbar h1{margin:0;font-size:1.5rem}
+.topbar .sub{color:var(--muted);font-size:.9rem;margin:.2rem 0 0}
+
+/* CARDS / GRID */
+.grid{display:grid;gap:18px}
+.tiles{grid-template-columns:repeat(4,1fr)}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+.tile .num{font-size:1.8rem;font-weight:800;color:var(--navy)}
+.tile .lbl{color:var(--muted);font-size:.85rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+.section-title{margin:26px 0 12px;font-size:1.1rem}
+
+/* OPPORTUNITY LIST */
+.filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.filters input,.filters select{max-width:240px}
+.opp-list{display:grid;gap:14px}
+.opp{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;grid-template-columns:1fr auto;gap:14px;align-items:start;cursor:pointer;transition:.15s}
+.opp:hover{box-shadow:var(--shadow);transform:translateY(-1px)}
+.opp h3{margin:0 0 .25rem;font-size:1.08rem}
+.opp .meta{color:var(--muted);font-size:.85rem;display:flex;gap:14px;flex-wrap:wrap;margin-top:.4rem}
+.opp .summary{color:var(--ink);font-size:.92rem;margin:.4rem 0 0;max-width:62ch}
+.tag{display:inline-block;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:.15rem .6rem;font-size:.78rem;color:var(--muted)}
+
+/* SCORE */
+.score-badge{text-align:center;min-width:96px}
+.score-num{font-size:1.6rem;font-weight:800;line-height:1}
+.score-rec{font-size:.78rem;font-weight:700;margin-top:.2rem}
+.s-good .score-num,.s-good .score-rec{color:var(--good)}
+.s-mid .score-num,.s-mid .score-rec{color:var(--warn)}
+.s-low .score-num,.s-low .score-rec{color:var(--bad)}
+.factors{display:grid;gap:.7rem;margin:1rem 0}
+.factors li{list-style:none;font-size:.88rem;color:var(--muted)}
+.factors .bar{display:block;height:8px;background:#eef2f4;border-radius:999px;overflow:hidden;margin-top:.3rem}
+.factors .bar b{display:block;height:100%;background:var(--teal);border-radius:999px}
+
+/* DETAIL */
+.detail-grid{display:grid;grid-template-columns:1fr 320px;gap:22px;align-items:start}
+.qa{display:grid;gap:14px}
+.qa .q{font-weight:700;color:var(--navy);font-size:.9rem}
+.qa .a{color:var(--ink);font-size:.95rem;margin:.15rem 0 0}
+.back{color:var(--muted);font-size:.9rem;cursor:pointer;display:inline-block;margin-bottom:12px}
+
+/* KANBAN */
+.board{display:grid;grid-template-columns:repeat(8,minmax(180px,1fr));gap:12px;overflow-x:auto;padding-bottom:10px}
+.col{background:#eef3f4;border-radius:12px;padding:10px;min-height:160px}
+.col h3{font-size:.82rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:0 0 10px;padding:0 4px}
+.col-count{background:#fff;border-radius:999px;padding:0 .4rem;font-size:.72rem;margin-left:.3rem}
+.pcard{background:#fff;border:1px solid var(--line);border-radius:9px;padding:10px;margin-bottom:8px;cursor:grab;font-size:.86rem}
+.pcard.drag{opacity:.5}
+.pcard .pt{font-weight:600;color:var(--navy);display:block;margin-bottom:.2rem}
+.pcard .pm{color:var(--muted);font-size:.76rem}
+.col.over{outline:2px dashed var(--teal);outline-offset:-4px}
+
+.empty{color:var(--muted);text-align:center;padding:40px;background:var(--card);border:1px dashed var(--line);border-radius:var(--radius)}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+@media (max-width:820px){
+  .layout{grid-template-columns:1fr}
+  .sidebar{flex-direction:row;align-items:center;overflow-x:auto;gap:6px;padding:10px}
+  .side-brand{padding:6px 10px 6px 4px}
+  .side-foot{margin:0}
+  .nav-link{white-space:nowrap;width:auto}
+  .tiles{grid-template-columns:1fr 1fr}
+  .detail-grid{grid-template-columns:1fr}
+  .two-col{grid-template-columns:1fr}
+  .main{padding:18px}
+}
+  </style>
+</head>
+<body>
+  <div id="app"><div class="boot">Loading Opportunity Assist…</div></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+// Opportunity Assist — Supabase client config
+// These are PUBLIC client keys (safe to expose). All data access is protected
+// by Row-Level Security in the database.
+window.OA_CONFIG = {
+  SUPABASE_URL: "https://girldctsnrdvdoktzfrv.supabase.co",
+  SUPABASE_PUBLISHABLE_KEY: "sb_publishable_F4q2lp6s8r2nhugBFfxlFA_B4q85yuI"
+};
+
+/* Opportunity Assist — MVP app (vanilla JS SPA on Supabase) */
+(function () {
+  "use strict";
+
+  var cfg = window.OA_CONFIG || {};
+  var sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_PUBLISHABLE_KEY);
+  var root = document.getElementById("app");
+
+  var STAGES = ["Ideas", "Reviewing", "Qualified", "Planning", "Writing", "Submitted", "Awarded", "Not Awarded"];
+
+  var state = {
+    user: null,
+    profile: null,
+    org: null,
+    view: "dashboard",
+    opps: [],
+    fit: {},        // opportunity_id -> {headline, rec, factors}
+    pipeline: [],
+    currentOpp: null
+  };
+
+  /* ---------- helpers ---------- */
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function money(n) {
+    if (n == null) return "—";
+    return "$" + Number(n).toLocaleString();
+  }
+  function daysUntil(d) {
+    if (!d) return null;
+    return Math.ceil((new Date(d) - new Date()) / 86400000);
+  }
+  function scoreClass(v) { return v >= 75 ? "s-good" : v >= 55 ? "s-mid" : "s-low"; }
+  function el(html) { var t = document.createElement("template"); t.innerHTML = html.trim(); return t.content.firstChild; }
+
+  /* ---------- fit score (preview heuristic from org profile) ---------- */
+  function computeFit(org, opp) {
+    var text = ((opp.title || "") + " " + (opp.summary || "") + " " + (opp.category || "") + " " + (opp.requirements || "")).toLowerCase();
+    var kws = (org.keywords || []).map(function (k) { return (k || "").toLowerCase().trim(); }).filter(Boolean);
+    var hits = kws.filter(function (k) { return text.indexOf(k) !== -1; }).length;
+    var orgFit = kws.length ? Math.round(40 + 60 * Math.min(1, hits / Math.max(3, kws.length))) : 60;
+
+    var geo = (opp.geography || "").toLowerCase();
+    var areas = (org.service_areas || "").toLowerCase();
+    var geoScore = 60;
+    if (geo.indexOf("national") !== -1) geoScore = 100;
+    else if (areas && geo && (areas.indexOf(geo) !== -1 || geo.split(/[ ,/]+/).some(function (g) { return g.length > 3 && areas.indexOf(g) !== -1; }))) geoScore = 100;
+    else if (areas) geoScore = 65;
+
+    var cap = (org.past_performance && org.past_performance.length > 40) ? 85 : 70;
+    var budget = 80;
+    var risk = 75;
+
+    var headline = Math.round(orgFit * 0.35 + geoScore * 0.25 + cap * 0.18 + budget * 0.12 + risk * 0.10);
+    var rec = headline >= 75 ? "Strongly pursue" : headline >= 55 ? "Worth reviewing" : "Probably pass";
+    return {
+      headline: headline, rec: rec, factors: [
+        { label: "Organizational fit", val: orgFit },
+        { label: "Geographic eligibility", val: geoScore },
+        { label: "Capacity", val: cap },
+        { label: "Budget range", val: budget },
+        { label: "Risk profile", val: risk }
+      ]
+    };
+  }
+
+  /* ---------- data ---------- */
+  function loadOpps() {
+    return sb.from("opportunities").select("*").order("deadline", { ascending: true })
+      .then(function (r) { state.opps = r.data || []; });
+  }
+  function loadPipeline() {
+    return sb.from("pipeline_items")
+      .select("*, opportunities(funding_amount, funding_amount_label, deadline, category)")
+      .order("sort_order", { ascending: true })
+      .then(function (r) { state.pipeline = r.data || []; });
+  }
+  function ensureFitScores() {
+    // compute + upsert any missing scores for current org
+    var have = state.fit;
+    var toUpsert = [];
+    state.opps.forEach(function (o) {
+      if (!have[o.id]) {
+        var f = computeFit(state.org, o);
+        have[o.id] = f;
+        toUpsert.push({ org_id: state.org.id, opportunity_id: o.id, headline_score: f.headline, recommendation: f.rec, factors: f.factors });
+      }
+    });
+    if (!toUpsert.length) return Promise.resolve();
+    return sb.from("fit_scores").upsert(toUpsert, { onConflict: "org_id,opportunity_id" }).then(function () {});
+  }
+  function loadFitScores() {
+    return sb.from("fit_scores").select("*").then(function (r) {
+      (r.data || []).forEach(function (row) {
+        state.fit[row.opportunity_id] = { headline: row.headline_score, rec: row.recommendation, factors: row.factors || [] };
+      });
+    });
+  }
+
+  /* ---------- auth views ---------- */
+  function renderAuth(mode) {
+    mode = mode || "login";
+    root.innerHTML = "";
+    var card = el(
+      '<div class="auth-wrap"><div class="auth-card">' +
+      '<div class="auth-brand"><span class="brand-mark">OA</span><div><strong>Opportunity Assist</strong><small>A My True Prosperity product</small></div></div>' +
+      '<div class="auth-tabs"><button data-m="login">Log in</button><button data-m="signup">Sign up</button></div>' +
+      '<form id="authForm">' +
+      '<div class="field"><label>Email</label><input type="email" id="email" required autocomplete="email" /></div>' +
+      '<div class="field"><label>Password</label><input type="password" id="password" required minlength="6" autocomplete="current-password" /></div>' +
+      '<div id="authMsg"></div>' +
+      '<button class="btn btn-primary" style="width:100%" type="submit" id="authBtn">Continue</button>' +
+      '</form>' +
+      '<p class="auth-foot">Opportunity Intelligence for Mission-Driven Growth</p>' +
+      '</div></div>'
+    );
+    root.appendChild(card);
+
+    function setMode(m) {
+      mode = m;
+      card.querySelectorAll(".auth-tabs button").forEach(function (b) { b.classList.toggle("active", b.dataset.m === m); });
+      card.querySelector("#authBtn").textContent = m === "signup" ? "Create account" : "Log in";
+      card.querySelector("#password").setAttribute("autocomplete", m === "signup" ? "new-password" : "current-password");
+      card.querySelector("#authMsg").innerHTML = "";
+    }
+    card.querySelectorAll(".auth-tabs button").forEach(function (b) {
+      b.addEventListener("click", function () { setMode(b.dataset.m); });
+    });
+    setMode(mode);
+
+    card.querySelector("#authForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var email = card.querySelector("#email").value.trim();
+      var pw = card.querySelector("#password").value;
+      var msg = card.querySelector("#authMsg");
+      var btn = card.querySelector("#authBtn");
+      btn.disabled = true; msg.innerHTML = "";
+      var p = mode === "signup"
+        ? sb.auth.signUp({ email: email, password: pw })
+        : sb.auth.signInWithPassword({ email: email, password: pw });
+      p.then(function (res) {
+        btn.disabled = false;
+        if (res.error) { msg.innerHTML = '<p class="error">' + esc(res.error.message) + "</p>"; return; }
+        if (mode === "signup" && !res.data.session) {
+          msg.innerHTML = '<div class="notice">Account created. Check your email to confirm, then log in.</div>';
+          setMode("login");
+          return;
+        }
+        boot(); // session established
+      }).catch(function (err) {
+        btn.disabled = false; msg.innerHTML = '<p class="error">' + esc(err.message || "Something went wrong") + "</p>";
+      });
+    });
+  }
+
+  /* ---------- onboarding (org profile) ---------- */
+  function renderOnboarding() {
+    root.innerHTML = "";
+    var card = el(
+      '<div class="auth-wrap"><div class="auth-card" style="max-width:560px">' +
+      '<div class="auth-brand"><span class="brand-mark">OA</span><div><strong>Set up your organization</strong><small>One-time setup — powers your Fit Scores</small></div></div>' +
+      '<form id="orgForm">' +
+      '<div class="field"><label>Organization name *</label><input id="o_name" required /></div>' +
+      '<div class="two-col">' +
+      '<div class="field"><label>Service areas</label><input id="o_areas" placeholder="e.g. Florida, Southeast US" /></div>' +
+      '<div class="field"><label>Target populations</label><input id="o_pops" placeholder="e.g. youth, ALICE families" /></div>' +
+      '</div>' +
+      '<div class="field"><label>Programs</label><textarea id="o_programs" rows="2" placeholder="What your organization runs"></textarea></div>' +
+      '<div class="field"><label>Keywords (comma separated)</label><input id="o_keywords" placeholder="WIOA, youth, financial capability, VITA, CRA" /><p class="hint">Used to match and score opportunities.</p></div>' +
+      '<div class="two-col">' +
+      '<div class="field"><label>UEI</label><input id="o_uei" /></div>' +
+      '<div class="field"><label>SAM status</label><input id="o_sam" placeholder="e.g. Active" /></div>' +
+      '</div>' +
+      '<div class="field"><label>Past performance</label><textarea id="o_perf" rows="2" placeholder="Relevant contracts/grants delivered"></textarea></div>' +
+      '<div id="orgMsg"></div>' +
+      '<button class="btn btn-primary" style="width:100%" id="orgBtn" type="submit">Save and continue</button>' +
+      '</form></div></div>'
+    );
+    root.appendChild(card);
+
+    card.querySelector("#orgForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var btn = card.querySelector("#orgBtn"); var msg = card.querySelector("#orgMsg");
+      btn.disabled = true; msg.innerHTML = "";
+      var kw = card.querySelector("#o_keywords").value.split(",").map(function (s) { return s.trim(); }).filter(Boolean);
+      var payload = {
+        name: card.querySelector("#o_name").value.trim(),
+        service_areas: card.querySelector("#o_areas").value.trim(),
+        target_populations: card.querySelector("#o_pops").value.trim(),
+        programs: card.querySelector("#o_programs").value.trim(),
+        keywords: kw,
+        uei: card.querySelector("#o_uei").value.trim(),
+        sam_status: card.querySelector("#o_sam").value.trim(),
+        past_performance: card.querySelector("#o_perf").value.trim(),
+        created_by: state.user.id
+      };
+      sb.from("organizations").insert(payload).select().single().then(function (r) {
+        if (r.error) { btn.disabled = false; msg.innerHTML = '<p class="error">' + esc(r.error.message) + "</p>"; return; }
+        return sb.from("profiles").update({ org_id: r.data.id }).eq("id", state.user.id).then(function (u) {
+          if (u.error) { btn.disabled = false; msg.innerHTML = '<p class="error">' + esc(u.error.message) + "</p>"; return; }
+          boot();
+        });
+      }).catch(function (err) { btn.disabled = false; msg.innerHTML = '<p class="error">' + esc(err.message) + "</p>"; });
+    });
+  }
+
+  /* ---------- app shell ---------- */
+  function renderShell() {
+    root.innerHTML = "";
+    var nav = [
+      ["dashboard", "📊", "Dashboard"],
+      ["radar", "📡", "Funding Radar"],
+      ["pipeline", "🗂️", "Capture Pipeline"],
+      ["profile", "🏢", "Organization"]
+    ];
+    var shell = el(
+      '<div class="layout">' +
+      '<aside class="sidebar">' +
+      '<div class="side-brand"><span class="brand-mark sm">OA</span><div><strong>Opportunity Assist</strong><small>' + esc(state.org.name) + '</small></div></div>' +
+      '<nav id="nav"></nav>' +
+      '<div class="side-foot">' + esc(state.user.email) + '<br/><button class="btn btn-ghost btn-sm" id="logout">Log out</button></div>' +
+      '</aside>' +
+      '<main class="main" id="main"></main>' +
+      '</div>'
+    );
+    root.appendChild(shell);
+    var navEl = shell.querySelector("#nav");
+    nav.forEach(function (n) {
+      var b = el('<button class="nav-link" data-v="' + n[0] + '"><span class="nav-ico">' + n[1] + '</span>' + n[2] + "</button>");
+      b.addEventListener("click", function () { state.view = n[0]; state.currentOpp = null; paint(); });
+      navEl.appendChild(b);
+    });
+    shell.querySelector("#logout").addEventListener("click", function () {
+      sb.auth.signOut().then(function () { state.profile = null; state.org = null; state.fit = {}; boot(); });
+    });
+    paint();
+  }
+
+  function paint() {
+    document.querySelectorAll(".nav-link").forEach(function (b) { b.classList.toggle("active", b.dataset.v === state.view && !state.currentOpp); });
+    var main = document.getElementById("main");
+    if (state.currentOpp) return renderOppDetail(main);
+    if (state.view === "dashboard") return renderDashboard(main);
+    if (state.view === "radar") return renderRadar(main);
+    if (state.view === "pipeline") return renderPipeline(main);
+    if (state.view === "profile") return renderProfile(main);
+  }
+
+  /* ---------- dashboard ---------- */
+  function renderDashboard(main) {
+    var byStage = {};
+    state.pipeline.forEach(function (p) { byStage[p.stage] = (byStage[p.stage] || 0) + 1; });
+    var pipelineValue = state.pipeline.reduce(function (s, p) {
+      return s + (p.opportunities && p.opportunities.funding_amount ? Number(p.opportunities.funding_amount) : 0);
+    }, 0);
+    var awarded = byStage["Awarded"] || 0;
+    var strong = state.opps.filter(function (o) { return state.fit[o.id] && state.fit[o.id].headline >= 75; }).length;
+    var closing = state.opps.filter(function (o) { var d = daysUntil(o.deadline); return d != null && d >= 0 && d <= 30; })
+      .sort(function (a, b) { return new Date(a.deadline) - new Date(b.deadline); }).slice(0, 5);
+
+    main.innerHTML =
+      '<div class="topbar"><div><h1>Dashboard</h1><p class="sub">Your opportunity pipeline at a glance</p></div></div>' +
+      '<div class="grid tiles">' +
+      tile(state.opps.length, "Opportunities on radar") +
+      tile(strong, "Strong matches (75%+)") +
+      tile(state.pipeline.length, "In capture pipeline") +
+      tile(money(pipelineValue), "Pipeline value") +
+      "</div>" +
+      '<h2 class="section-title">Closing soon</h2>' +
+      (closing.length ? '<div class="opp-list" id="closing"></div>' : '<div class="empty">No deadlines in the next 30 days.</div>');
+
+    if (closing.length) {
+      var wrap = main.querySelector("#closing");
+      closing.forEach(function (o) { wrap.appendChild(oppRow(o)); });
+    }
+  }
+  function tile(num, lbl) { return '<div class="tile"><div class="num">' + esc(num) + '</div><div class="lbl">' + esc(lbl) + "</div></div>"; }
+
+  /* ---------- funding radar ---------- */
+  function renderRadar(main) {
+    main.innerHTML =
+      '<div class="topbar"><div><h1>Funding Radar</h1><p class="sub">' + state.opps.length + ' opportunities · scored for ' + esc(state.org.name) + '</p></div></div>' +
+      '<div class="filters">' +
+      '<input id="q" placeholder="Search opportunities…" />' +
+      '<select id="cat"><option value="">All categories</option></select>' +
+      '<select id="sort"><option value="fit">Sort: Best fit</option><option value="deadline">Sort: Deadline</option><option value="amount">Sort: Amount</option></select>' +
+      "</div>" +
+      '<div class="opp-list" id="list"></div>';
+
+    var cats = {};
+    state.opps.forEach(function (o) { if (o.category) cats[o.category] = 1; });
+    var catSel = main.querySelector("#cat");
+    Object.keys(cats).sort().forEach(function (c) { catSel.appendChild(el('<option value="' + esc(c) + '">' + esc(c) + "</option>")); });
+
+    function draw() {
+      var q = main.querySelector("#q").value.toLowerCase();
+      var cat = catSel.value;
+      var sort = main.querySelector("#sort").value;
+      var rows = state.opps.filter(function (o) {
+        var hay = (o.title + " " + (o.summary || "") + " " + (o.category || "") + " " + (o.geography || "")).toLowerCase();
+        return (!q || hay.indexOf(q) !== -1) && (!cat || o.category === cat);
+      });
+      rows.sort(function (a, b) {
+        if (sort === "deadline") return new Date(a.deadline || "2999") - new Date(b.deadline || "2999");
+        if (sort === "amount") return (b.funding_amount || 0) - (a.funding_amount || 0);
+        return (state.fit[b.id] ? state.fit[b.id].headline : 0) - (state.fit[a.id] ? state.fit[a.id].headline : 0);
+      });
+      var list = main.querySelector("#list");
+      list.innerHTML = "";
+      if (!rows.length) { list.innerHTML = '<div class="empty">No matching opportunities.</div>'; return; }
+      rows.forEach(function (o) { list.appendChild(oppRow(o)); });
+    }
+    main.querySelector("#q").addEventListener("input", draw);
+    catSel.addEventListener("change", draw);
+    main.querySelector("#sort").addEventListener("change", draw);
+    draw();
+  }
+
+  function oppRow(o) {
+    var f = state.fit[o.id] || { headline: 0, rec: "—" };
+    var d = daysUntil(o.deadline);
+    var row = el(
+      '<div class="opp">' +
+      '<div><h3>' + esc(o.title) + "</h3>" +
+      '<div class="meta"><span class="tag">' + esc(o.category || "Opportunity") + '</span>' +
+      "<span>" + esc(o.funding_amount_label || money(o.funding_amount)) + "</span>" +
+      "<span>" + esc(o.geography || "") + "</span>" +
+      (d != null ? "<span>" + (d < 0 ? "Closed" : "Due in " + d + " days") + "</span>" : "") +
+      "</div>" +
+      '<p class="summary">' + esc(o.summary || "") + "</p></div>" +
+      '<div class="score-badge ' + scoreClass(f.headline) + '"><div class="score-num">' + f.headline + "%</div><div class=\"score-rec\">" + esc(f.rec) + "</div></div>" +
+      "</div>"
+    );
+    row.addEventListener("click", function () { state.currentOpp = o; paint(); });
+    return row;
+  }
+
+  /* ---------- opportunity detail ---------- */
+  function renderOppDetail(main) {
+    var o = state.currentOpp;
+    var f = state.fit[o.id] || computeFit(state.org, o);
+    var a = o.ai_summary || {};
+    var inPipeline = state.pipeline.some(function (p) { return p.opportunity_id === o.id; });
+    var qa = [
+      ["What is this?", a.what], ["Who can apply?", a.who], ["How much?", a.amount],
+      ["Key deadlines", a.deadlines], ["Required documents", a.documents],
+      ["Evaluation criteria", a.criteria], ["Key deliverables", a.deliverables], ["Hidden risks", a.risks]
+    ].filter(function (x) { return x[1]; });
+
+    main.innerHTML =
+      '<span class="back" id="back">← Back to Funding Radar</span>' +
+      '<div class="topbar"><div><h1>' + esc(o.title) + '</h1><p class="sub">' + esc(o.source || "") + " · " + esc(o.geography || "") + " · " + esc(o.funding_amount_label || money(o.funding_amount)) + "</p></div></div>" +
+      '<div class="detail-grid">' +
+      '<div class="card"><h2>AI Opportunity Summary</h2><div class="qa">' +
+      qa.map(function (x) { return '<div><div class="q">' + esc(x[0]) + '</div><div class="a">' + esc(x[1]) + "</div></div>"; }).join("") +
+      (o.source_url ? '<div><a href="' + esc(o.source_url) + '" target="_blank" rel="noopener">View source ↗</a></div>' : "") +
+      "</div></div>" +
+      '<div class="card score-side"><h2>AI Fit Score</h2>' +
+      '<div class="score-badge ' + scoreClass(f.headline) + '" style="margin:6px 0 4px"><div class="score-num" style="font-size:2.4rem">' + f.headline + '%</div><div class="score-rec">' + esc(f.rec) + "</div></div>" +
+      '<ul class="factors" style="padding:0">' +
+      (f.factors || []).map(function (fc) { return "<li>" + esc(fc.label) + " — " + fc.val + '%<i class="bar"><b style="width:' + fc.val + '%"></b></i></li>'; }).join("") +
+      "</ul>" +
+      '<button class="btn ' + (inPipeline ? "btn-ghost" : "btn-primary") + '" style="width:100%" id="addPipe"' + (inPipeline ? " disabled" : "") + ">" + (inPipeline ? "Already in pipeline" : "Add to Capture Pipeline") + "</button>" +
+      '<p class="hint" style="margin-top:.6rem">Fit Score is computed from your organization profile. Connect an AI key to enable narrative scoring.</p>' +
+      "</div></div>";
+
+    main.querySelector("#back").addEventListener("click", function () { state.currentOpp = null; paint(); });
+    var addBtn = main.querySelector("#addPipe");
+    if (addBtn && !inPipeline) {
+      addBtn.addEventListener("click", function () {
+        addBtn.disabled = true;
+        sb.from("pipeline_items").insert({
+          org_id: state.org.id, opportunity_id: o.id, title: o.title, stage: "Reviewing"
+        }).select("*, opportunities(funding_amount, funding_amount_label, deadline, category)").single().then(function (r) {
+          if (r.error) { addBtn.disabled = false; alert(r.error.message); return; }
+          state.pipeline.push(r.data);
+          state.view = "pipeline"; state.currentOpp = null; paint();
+        });
+      });
+    }
+  }
+
+  /* ---------- capture pipeline (kanban) ---------- */
+  function renderPipeline(main) {
+    main.innerHTML =
+      '<div class="topbar"><div><h1>Capture Pipeline</h1><p class="sub">Drag cards between stages</p></div></div>' +
+      (state.pipeline.length ? '<div class="board" id="board"></div>' : '<div class="empty">Your pipeline is empty. Add opportunities from the Funding Radar.</div>');
+    if (!state.pipeline.length) return;
+    var board = main.querySelector("#board");
+    STAGES.forEach(function (stage) {
+      var items = state.pipeline.filter(function (p) { return p.stage === stage; });
+      var col = el('<div class="col" data-stage="' + esc(stage) + '"><h3>' + esc(stage) + '<span class="col-count">' + items.length + "</span></h3></div>");
+      items.forEach(function (p) {
+        var amt = p.opportunities && p.opportunities.funding_amount_label ? p.opportunities.funding_amount_label : "";
+        var c = el('<div class="pcard" draggable="true" data-id="' + p.id + '"><span class="pt">' + esc(p.title) + '</span><span class="pm">' + esc(amt) + "</span></div>");
+        c.addEventListener("dragstart", function (e) { e.dataTransfer.setData("text/plain", p.id); c.classList.add("drag"); });
+        c.addEventListener("dragend", function () { c.classList.remove("drag"); });
+        col.appendChild(c);
+      });
+      col.addEventListener("dragover", function (e) { e.preventDefault(); col.classList.add("over"); });
+      col.addEventListener("dragleave", function () { col.classList.remove("over"); });
+      col.addEventListener("drop", function (e) {
+        e.preventDefault(); col.classList.remove("over");
+        var id = e.dataTransfer.getData("text/plain");
+        moveCard(id, stage);
+      });
+      board.appendChild(col);
+    });
+  }
+  function moveCard(id, stage) {
+    var item = state.pipeline.filter(function (p) { return p.id === id; })[0];
+    if (!item || item.stage === stage) return;
+    item.stage = stage;
+    paint();
+    sb.from("pipeline_items").update({ stage: stage, updated_at: new Date().toISOString() }).eq("id", id).then(function (r) {
+      if (r.error) alert(r.error.message);
+    });
+  }
+
+  /* ---------- organization profile ---------- */
+  function renderProfile(main) {
+    var o = state.org;
+    main.innerHTML =
+      '<div class="topbar"><div><h1>Organization</h1><p class="sub">Updates here re-score your opportunities</p></div></div>' +
+      '<div class="card" style="max-width:680px"><form id="pf">' +
+      field("p_name", "Organization name", o.name) +
+      '<div class="two-col">' + field("p_areas", "Service areas", o.service_areas) + field("p_pops", "Target populations", o.target_populations) + "</div>" +
+      area("p_programs", "Programs", o.programs) +
+      field("p_keywords", "Keywords (comma separated)", (o.keywords || []).join(", ")) +
+      '<div class="two-col">' + field("p_uei", "UEI", o.uei) + field("p_sam", "SAM status", o.sam_status) + "</div>" +
+      area("p_perf", "Past performance", o.past_performance) +
+      '<div id="pfMsg"></div>' +
+      '<button class="btn btn-primary" id="pfBtn" type="submit">Save changes</button>' +
+      "</form></div>";
+
+    main.querySelector("#pf").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var btn = main.querySelector("#pfBtn"); var msg = main.querySelector("#pfMsg");
+      btn.disabled = true; msg.innerHTML = "";
+      var kw = main.querySelector("#p_keywords").value.split(",").map(function (s) { return s.trim(); }).filter(Boolean);
+      var payload = {
+        name: main.querySelector("#p_name").value.trim(),
+        service_areas: main.querySelector("#p_areas").value.trim(),
+        target_populations: main.querySelector("#p_pops").value.trim(),
+        programs: main.querySelector("#p_programs").value.trim(),
+        keywords: kw,
+        uei: main.querySelector("#p_uei").value.trim(),
+        sam_status: main.querySelector("#p_sam").value.trim(),
+        past_performance: main.querySelector("#p_perf").value.trim()
+      };
+      sb.from("organizations").update(payload).eq("id", o.id).select().single().then(function (r) {
+        btn.disabled = false;
+        if (r.error) { msg.innerHTML = '<p class="error">' + esc(r.error.message) + "</p>"; return; }
+        state.org = r.data;
+        state.fit = {}; // recompute on next radar load
+        ensureFitScores().then(function () { msg.innerHTML = '<div class="notice">Saved. Opportunities re-scored.</div>'; });
+      });
+    });
+  }
+  function field(id, label, val) { return '<div class="field"><label>' + esc(label) + '</label><input id="' + id + '" value="' + esc(val || "") + '" /></div>'; }
+  function area(id, label, val) { return '<div class="field"><label>' + esc(label) + '</label><textarea id="' + id + '" rows="2">' + esc(val || "") + "</textarea></div>"; }
+
+  /* ---------- boot ---------- */
+  function boot() {
+    root.innerHTML = '<div class="boot">Loading Opportunity Assist…</div>';
+    sb.auth.getSession().then(function (s) {
+      var session = s.data.session;
+      if (!session) { renderAuth("login"); return; }
+      state.user = session.user;
+      return sb.from("profiles").select("*").eq("id", state.user.id).single().then(function (pr) {
+        state.profile = pr.data || { id: state.user.id, org_id: null };
+        if (!state.profile.org_id) { renderOnboarding(); return; }
+        return sb.from("organizations").select("*").eq("id", state.profile.org_id).single().then(function (orgR) {
+          if (orgR.error || !orgR.data) { renderOnboarding(); return; }
+          state.org = orgR.data;
+          return Promise.all([loadOpps(), loadFitScores(), loadPipeline()]).then(function () {
+            return ensureFitScores();
+          }).then(function () { renderShell(); });
+        });
+      });
+    }).catch(function (err) {
+      root.innerHTML = '<div class="auth-wrap"><div class="auth-card"><p class="error">Startup error: ' + esc(err.message || err) + '</p><button class="btn btn-primary" onclick="location.reload()">Reload</button></div></div>';
+    });
+  }
+
+  boot();
+})();
+  </script>
+</body>
+</html>
