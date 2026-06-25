@@ -49,6 +49,9 @@ label{display:block;font-weight:600;font-size:.85rem;margin:0 0 .3rem;color:var(
 .auth-tabs button{flex:1;border:0;background:transparent;padding:.55rem;border-radius:8px;font-weight:600;color:var(--muted);cursor:pointer}
 .auth-tabs button.active{background:#fff;color:var(--navy);box-shadow:0 1px 4px rgba(0,0,0,.06)}
 .auth-foot{margin-top:1rem;text-align:center;font-size:.85rem;color:var(--muted)}
+.auth-or{display:flex;align-items:center;text-align:center;color:var(--muted);font-size:.8rem;margin:.9rem 0}
+.auth-or::before,.auth-or::after{content:"";flex:1;height:1px;background:var(--line)}
+.auth-or span{padding:0 .7rem}
 
 /* LAYOUT */
 .layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
@@ -263,6 +266,8 @@ window.OA_CONFIG = {
       '<div id="authMsg"></div>' +
       '<button class="btn btn-primary" style="width:100%" type="submit" id="authBtn">Continue</button>' +
       '</form>' +
+      '<div class="auth-or"><span>or</span></div>' +
+      '<button class="btn btn-ghost" style="width:100%" id="guestBtn" type="button">Explore as guest (no account)</button>' +
       '<p class="auth-foot">Opportunity Intelligence for Mission-Driven Growth</p>' +
       '</div></div>'
     );
@@ -301,6 +306,37 @@ window.OA_CONFIG = {
         boot(); // session established
       }).catch(function (err) {
         btn.disabled = false; msg.innerHTML = '<p class="error">' + esc(err.message || "Something went wrong") + "</p>";
+      });
+    });
+
+    // Guest / demo mode — anonymous sign-in + auto demo org
+    var guestBtn = card.querySelector("#guestBtn");
+    guestBtn.addEventListener("click", function () {
+      var msg = card.querySelector("#authMsg");
+      guestBtn.disabled = true;
+      msg.innerHTML = '<div class="notice">Setting up your demo workspace…</div>';
+      sb.auth.signInAnonymously().then(function (res) {
+        if (res.error) {
+          guestBtn.disabled = false;
+          msg.innerHTML = '<p class="error">Guest mode is not enabled yet. (Turn on "Allow anonymous sign-ins" in Supabase.)</p>';
+          return;
+        }
+        state.user = res.data.user;
+        var demo = {
+          name: "Demo Organization",
+          service_areas: "Florida",
+          target_populations: "youth, ALICE families",
+          programs: "Workforce development, financial capability, youth employment",
+          keywords: ["WIOA", "youth", "financial capability", "VITA", "CRA", "workforce"],
+          past_performance: "Sample organization for exploring Opportunity Assist.",
+          created_by: res.data.user.id
+        };
+        sb.from("organizations").insert(demo).select().single().then(function (r) {
+          if (r.error) { guestBtn.disabled = false; msg.innerHTML = '<p class="error">' + esc(r.error.message) + "</p>"; return; }
+          sb.from("profiles").upsert({ id: state.user.id, org_id: r.data.id }).then(function () { boot(); });
+        });
+      }).catch(function (err) {
+        guestBtn.disabled = false; msg.innerHTML = '<p class="error">' + esc(err.message || "Something went wrong") + "</p>";
       });
     });
   }
